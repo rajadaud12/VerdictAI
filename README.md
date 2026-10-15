@@ -1,5 +1,7 @@
 # Verdict — Decision Studio
 
+![Verdict decision studio — decision brief and option evaluation interface](docs/images/verdict-cover.webp)
+
 [Live application](https://www.verdictlabs.tech/)
 
 Verdict is a full-stack decision-support application built with Next.js, React, and TypeScript. It turns an open-ended question into a confirmed decision brief, then compares the available options against explicit criteria and constraints using the JEV decision engine.
