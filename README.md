@@ -1,16 +1,32 @@
-# Verdict Decision Studio
+# Verdict — Decision Studio
 
-A guided decision application built with Next.js. Verdict turns an ambiguous request into a confirmed, structured brief, converts that brief into typed JEV questions, and visualizes JEV's probabilistic result.
+[Live application](https://www.verdictlabs.tech/)
 
-## Flow
+Verdict is a full-stack decision-support application built with Next.js, React, and TypeScript. It turns an open-ended question into a confirmed decision brief, then compares the available options against explicit criteria and constraints using the JEV decision engine.
 
-1. **Discover** — Ollama Cloud (`gpt-oss:120b`) or OpenAI (`gpt-5.6-luna`) asks adaptive follow-up questions.
-2. **Structure** — stable facts become a live decision brief; material gaps stay visible.
-3. **Confirm** — the customer approves the complete understanding or enters the “What did I miss?” revision loop.
-4. **Architect** — the selected LLM turns the confirmed brief into structured candidates, weighted criteria, explicit hard constraints, and atomic Choice, Score, and Noul questions.
-5. **Decide** — JEV evaluates every option × criterion and option × constraint independently; application code composes the typed answers and uses one overall Choice only as a disagreement check.
+## How it works
 
-## Setup
+1. **Discover:** an Ollama Cloud or OpenAI interviewer asks adaptive follow-up questions, with suggested answers and custom input.
+2. **Structure:** the app builds a decision brief and identifies missing context.
+3. **Confirm:** the user reviews the understanding or revises it through the “What did I miss?” flow.
+4. **Architect:** the language model creates candidates, weighted criteria, hard constraints, and typed JEV questions.
+5. **Evaluate:** the server evaluates option/criterion and option/constraint pairs, composes their results, and uses an overall Choice question as a disagreement check.
+6. **Review:** the interface presents rankings, confidence, criterion scores, constraint checks, and a copyable summary.
+
+Recent conversations are stored in the browser's local storage. They are not a cross-device account history. Outputs depend on the supplied brief and model responses; the app does not guarantee outcomes.
+
+## Stack
+
+- Next.js App Router and React for the interface and server routes
+- TypeScript and Zod for structured request/response contracts
+- Ollama Cloud and the OpenAI Responses API for interviewing and plan generation
+- TypeSafe AI / JEV for probabilistic evaluation
+- OGL for the animated background; Lucide for icons
+- Vitest and ESLint for verification
+
+## Local development
+
+Use Node.js 20.9 or newer and the package-manager version specified in package.json.
 
 ```bash
 pnpm install
@@ -18,32 +34,35 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+On Windows PowerShell, use `Copy-Item .env.example .env.local`. Open [localhost:3000](http://localhost:3000).
 
-Required server-side variables:
+Configure these server-side variables:
 
-- `OLLAMA_API_KEY` for the default interviewer
-- `TYPESAFE_API_KEY` for the JEV decision engine
-- `OPENAI_API_KEY` to enable the optional Luna interviewer
+- `OLLAMA_API_KEY`: default interviewer
+- `TYPESAFE_API_KEY`: JEV evaluation
+- `OPENAI_API_KEY`: optional OpenAI interviewer
 
-No provider key is exposed to browser code. `.env.local` is ignored by Git.
+.env.example documents optional model and base-URL overrides. /api/config reports provider availability without returning keys. Keep .env.local out of version control.
 
-## Verification
+## Code map
+
+- app/page.tsx: interview, confirmation, settings, recent chats, and decision report
+- app/api/interview/route.ts: adaptive interview
+- app/api/decision/route.ts: plan generation and evaluation
+- app/api/config/route.ts: provider configuration status
+- lib/llm.ts: Ollama and OpenAI clients
+- lib/jev.ts: JEV normalization and HTTP client
+- lib/prompts.ts: interview and architect instructions
+- lib/schemas.ts and lib/types.ts: validation and shared types
+
+## Verification and production
 
 ```bash
 pnpm typecheck
 pnpm lint
 pnpm test
 pnpm build
+pnpm start
 ```
 
-The JEV contract tests verify request normalization, complete score/constraint matrices, diagnostic Choice coverage, response distributions, and the official `state + model + questions` payload without sending test data to an external service.
-
-## Key files
-
-- `app/page.tsx` — guided interview, settings, confirmation, and decision report UI
-- `app/api/interview/route.ts` — dynamic interview endpoint
-- `app/api/decision/route.ts` — JEV plan generation and evaluation orchestration
-- `lib/prompts.ts` — interviewer and JEV architect behavior
-- `lib/llm.ts` — Ollama Cloud and OpenAI Responses integrations
-- `lib/jev.ts` — typed JEV request normalization and HTTP client
+Contract tests cover normalization, score/constraint matrices, diagnostic Choice coverage, and response distributions without external inference calls. A production deployment needs the same server-side provider variables as local development.
